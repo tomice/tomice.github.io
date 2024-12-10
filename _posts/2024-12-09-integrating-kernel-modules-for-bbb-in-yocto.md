@@ -410,12 +410,19 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/GPL-2.0-only;md5=801f80980d171d
 SRC_URI = "file://example_char_user.c"
 
 S = "${WORKDIR}"
+
+# This is a nice-ism to allow us to work with multiple libcs. We leave it up
+# to BitBake to choose the correct one based on how the build is configured.
 DEPENDS = "virtual/libc"
 
+# Compilation is similar to how you would compile on the commandline with GCC.
+# In this case, ${CC} points to our default compiler with the default
+# compile-time flags and linker flags
 do_compile() {
     ${CC} ${CFLAGS} ${LDFLAGS} example_char_user.c -o example_char_user
 }
 
+# Create the bin directory and install the userspace app
 do_install() {
     install -d ${D}${bindir}
     install -m 0755 example_char_user ${D}${bindir}/example_char_user
@@ -448,6 +455,11 @@ clean:
 	$(MAKE) -C $(KERNEL_SRC) M=$(PWD) clean
 ```
 
+> **Note:** I am hoping the reader is familiar with Makefile architecture if
+> they are working on integrating kernel modules, but in case you are not,
+> [this site](https://makefiletutorial.com/) is pretty decent at explaining
+> what they are and how to use them.
+
 ### 2. Create the LKM Recipe
 
 While still in the `meta-bbb` repository, create the following:
@@ -464,23 +476,42 @@ DESCRIPTION = "A simple example character device kernel module"
 LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/GPL-2.0-only;md5=801f80980d171dd6425610833a22dbe6"
 
+# This is the key class that allows BitBake to know about to properly compile
+# kernel modules.
 inherit module
 
-SRC_URI = "file://example_char_dev.c \
-           file://Makefile"
+SRC_URI = " \
+    file://example_char_dev.c \
+    file://Makefile \
+"
 
 S = "${WORKDIR}"
+
+# Convenience var for the name of the module
 MODULE_NAME = "example_char_dev"
 
+# Calling oe_runmake against our Makefile
 do_compile() {
     oe_runmake KERNEL_SRC=${STAGING_KERNEL_BUILDDIR} ARCH=${ARCH}
 }
 
+# Create the directory and install the module
+# Note the use of ${B} here
 do_install() {
     install -d ${D}/lib/modules/${KERNEL_VERSION}
     install -m 0644 ${B}/${MODULE_NAME}.ko ${D}/lib/modules/${KERNEL_VERSION}/
 }
 ```
+
+As shown in the comments, the key component to this recipe is the
+[`inherit module`](https://docs.yoctoproject.org/ref-manual/classes.html#module)
+class. It handles the majority of the technical details necessary to compile
+a kernel module out-of-tree like we are doing. Another thing we are doing
+is referring to the
+[build directory](https://docs.yoctoproject.org/ref-manual/variables.html#term-B)
+where build artifacts like the compiled kernel module reside. We want to make
+sure BitBake is in the build directory when we are attempting to install our
+kernel module.
 
 ### 3. Add the Image Hooks
 
@@ -522,7 +553,8 @@ You should see the `.ko` show up here. If so, great! It means it got added to
 the rootfs! If you don't see it, double-check to make sure you added it to
 the `IMAGE_INSTALL` variable correctly.
 
-Now let's load it up and test it:
+Now let's install the module, create the
+[file system node](https://linux.die.net/man/2/mknod), and test it:
 
 ```sh
 insmod /lib/modules/$(uname -r)/example_char_dev.ko
@@ -537,6 +569,15 @@ If all went well, you should see something like the following:
 ```sh
 Device Output: Counter: 1, Message: Hello, Kernel!
 ```
+
+> **Note:** [`insmod`](https://linux.die.net/man/8/insmod) is generally
+> considered the older way of loading modules. It is not as smart as the
+> newer [`mopdprobe`](https://linux.die.net/man/8/modprobe) program as it does
+> not handle dependencies. It directly loads the module in a straightforward
+> manner. In our case, it doesn't actually matter which one is chosen. For more
+> complex cases, look into using `modprobe`. For most kernel-related tutorials,
+> especially older ones, you're more likely to see `insmod`. Both are valid and
+> both are worth understanding.
 
 ## Creating the Static Kernel Module
 
@@ -646,7 +687,11 @@ config EXAMPLE_CHAR
       A simple example character driver that is built into the kernel.
 ```
 
-It will look like this:
+This is the standard way for writing menu entries in the Kconfig Language.
+Further detail can be found [here](https://docs.kernel.org/kbuild/kconfig-language.html)
+if you have never come across this before.
+
+After inserting this into the `Kconfig`, it will look like this:
 
 ```sh
 <snipped>
@@ -672,7 +717,8 @@ obj-$(CONFIG_EXAMPLE_CHAR) += example_char_dev.o
 ```
 
 This will tell the kernel's build system to compile `example_char_dev.c` into
-the kernel when `CONFIG_EXAMPLE_CHAR` is enabled.
+the kernel when `CONFIG_EXAMPLE_CHAR` is enabled. These are referred to as
+[goal definitions](https://docs.kernel.org/kbuild/makefiles.html#goal-definitions).
 
 ### 4. Creating the Patch
 
@@ -791,8 +837,10 @@ of our patch. Yocto should take care of the rest.
 > ```sh
 > FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 >
-> SRC_URI += "file://0001-Add-example-char-driver.patch \
->             file://example_char.cfg"
+> SRC_URI += " \
+>     file://0001-Add-example-char-driver.patch \
+>     file://example_char.cfg \
+> "
 >
 > KERNEL_CONFIG_FRAGMENTS += "example_char.cfg"
 >```
