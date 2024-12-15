@@ -115,7 +115,7 @@ any meta layers that might have them.
 > parse the available recipes within your working tree to see if a component
 > is available to call. However, I find it to be a bit verbose, so I rarely
 > use it. Feel free to experiment by sourcing `oe-init-build-env` and then
-> doing something like `bitbake-layers show-recipes | grep <component>`
+> doing something like `bitbake-layers show-recipes | grep <component>`.
 
 The first place you should always visit when seeing if recipes exist is the
 [Layer Index](https://layers.openembedded.org/layerindex/branch/master/layers/).
@@ -215,7 +215,7 @@ dependencies and add them to the recipe. At least not at the time of writing
 this blog post.
 
 The exact area you want to look at is `LAYERDEPENDS` in the `layer.conf` file.
-You can see it requires the `core` layer (itself), the `openembedded` layer,
+You can see it requires the `core` layer (`meta`), the `openembedded` layer,
 and the `meta-python` layer.
 
 To automatically add everything we need, type the following while inside the
@@ -297,7 +297,7 @@ touch recipes-example/dnsmasq-config/files/blocked.list
 Populate the `blocked.list` with the following:
 
 ```sh
-# This file is your blocked list where websites go to DNS la la land
+# This file is your blocked list where websites go to DNS La La Land
 # Redirect your most hated, least trusted websites to 127.0.0.1 like shown:
 127.0.0.1   doubleclick.net
 127.0.0.1   ads.facebook.com
@@ -337,8 +337,8 @@ need to make is to have `dnsmasq` look for our newly created `blocked.list`.
 In the [`dnsmasq.conf.example`](https://github.com/imp/dnsmasq/blob/master/dnsmasq.conf.example#L141),
 there exists a `addn-hosts` section where you can tell `dnsmasq` to look at
 another file besides just `/etc/hosts`. We want this because we want `dnsmasq`
-to look at our custom `blocked.list` file, so we need to uncomment this.
-We also need to make sure we log all `nslookup` entries to a file.
+to look at our custom `blocked.list` file, so we need to uncomment this line.
+We also need to make sure to log all `nslookup` entries to a file.
 We can do all of this with a `.bbappend`, so let's create it:
 
 ```sh
@@ -435,8 +435,9 @@ arsort($domainCounts);
 
 // Limit top domains shown
 // NOTE: We will use CDNs here. In a truly embedded system, we would be
-// placing these files on the disk somewhere and reading from them so we could
-// guarantee they would always work with our packaged system.
+// placing these files on the rootfs somewhere and reading from them so we
+// could guarantee they would always work with our packaged system even when
+// disconnected from the internet.
 $topDomains = array_slice($domainCounts, 0, 10, true);
 ?>
 <!DOCTYPE html>
@@ -574,7 +575,8 @@ do_install:append() {
 > `cgi.fix_pathinfo = 1` to it. I found this wasn't necessary. However, if you
 > would like to add it, I found `php-cgi` will see it if you place it in the
 > `/usr/bin` directory. Feel free to create a recipe that creates this file and
-> places it in that directory if you'd like.
+> places it in that directory if you'd like. You can place a `php_%.bbappend`
+> in `recipes-devtools/php` in the `meta-bbb` layer.
 
 ### 7. Building
 
@@ -586,14 +588,16 @@ bitbake mycustom-image
 ```
 
 If everything was successful, you should have a `.wic` located in the `tmp`
-directory as mentioned in previous tutorials.
+directory as mentioned in previous tutorials. Write this to a MicroSD card
+using any of the previous techniques we mentioned in past tutorials.
 
 ## Testing the DNS Sinkhole
 
-Insert the MicroSD card, boot, and login. Look up what the IP address is by
-typing `ifconfig` and looking at what IP address the BeagleBone Black is
-currently set to. On your machine that is connected to the same network as the
-BBB, navigate to `http://<BBB-IP-ADDRESS>/index.php`. You should see:
+Insert the MicroSD card, boot, and login using `root` with no password.
+Look up what the IP address is by typing `ifconfig` and looking at what IP
+address the BeagleBone Black is currently set to. On your machine that is
+connected to the same network as the BBB, navigate to
+`http://<BBB-IP-ADDRESS>/index.php`. You should see:
 
 ![Landing Page](/assets/img/2024-12-15/dns-sinkhole-opening-page.png)
 
@@ -620,7 +624,7 @@ and you should see this:
 
 ![Blocked](/assets/img/2024-12-15/dns-sinkhole-blocked.png)
 
-As you continue to attempt to navigate to these sites, this website will
+As you continue to attempt to navigate across the web, this PHP website will
 continue to parse the `dnsmasq` log and populate it with the latest info.
 
 ## Troubleshooting
@@ -650,7 +654,8 @@ that all of your computers automatically send those blocked IPs to the sinkhole,
 update your router's DNS settings so that it points to the BeagleBone Black's
 IP as the primary DNS server. The Pi-hole website has a
 [great example](https://discourse.pi-hole.net/t/how-do-i-configure-my-devices-to-use-pi-hole-as-their-dns-server/245)
-on how to do this.
+on how to do this. You can customize the front end website by having it be more
+dynamic, parse more stats, have a nicer looking GUI, and more!
 
 ## Further Reading
 
@@ -659,5 +664,6 @@ Some useful links that helped me when I first started out:
 - [Pi-hole Docs](https://docs.pi-hole.net/main/prerequisites/)
 - [dnsmasq on ArchWiki](https://wiki.archlinux.org/title/Dnsmasq)
 - [PHP Tutorial](https://www.php.net/manual/en/tutorial.php)
+- [Get started with Bootstrap](https://getbootstrap.com/docs/5.2/getting-started/introduction/)
 
 Happy blocking!
