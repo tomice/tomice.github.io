@@ -1,5 +1,5 @@
 ---
-title: Back to Basics: A Tour of Yocto
+title: "Back to Basics: A Tour of Yocto"
 description: Learn how BitBake and Poky work under the hood
 date: 2025-02-11 00:00:00 -0500
 categories: [Programming, Shell Scripting, Linux, Embedded Linux, Yocto]
