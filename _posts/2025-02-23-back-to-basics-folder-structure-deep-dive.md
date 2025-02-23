@@ -147,12 +147,10 @@ community expects your distro to be built.
 The scripts directory contains a variety of utility scripts to help with tasks
 related to the build process, configuration, testing, performance monitoring,
 and more. These scripts enhance the development and build experience within the
-Yocto ecosystem. I'll highlight a few of them, but it is definitely worth
-checking out as there are many more than the ones I list here.
+Yocto ecosystem. I'll categorize some of these and highlight a few of them, but
+it's definitely worth checking out as there are many more than the ones I list:
 
-### Highlights in the Scripts Folder
-
-#### 1. **Automation and Build Scripts**
+### Automation and Build Scripts
 
 - **`buildall-qemu`**: Automates the process of building and testing recipes
                        across multiple QEMU machine configurations. See the
@@ -165,7 +163,7 @@ checking out as there are many more than the ones I list here.
              Supports various image formats and partitioning schemes, essential  
              for customizing and deploying embedded Linux images.
 
-#### 2. **Performance and Build History Tools**
+### Performance and Build History Tools
 
 - **`buildhistory-diff`**: Reports differences in build history between revisions.
 - **`buildstats-diff`**: Compares build statistics between builds.
@@ -173,14 +171,14 @@ checking out as there are many more than the ones I list here.
 - **`oe-build-perf-report`**: Generates performance reports for builds.
 - **`oe-build-perf-test`**: Tests the performance of builds via benchmarks.
 
-#### 3. **Repository and Patch Management Utilities**
+### Repository and Patch Management Utilities
 
 - **`combo-layer`**: Manages and merges multiple repositories into a combo-layer repo.
 - **`create-pull-request`**: Automates the creation of pull requests in Git repositories.
 - **`gen-lockedsig-cache`**: Generates signature caches for reproducible builds.
 - **`bitbake-prserv-tool`**: Provides utilities for managing the BitBake PR service.
 
-#### 4. **Testing and Validation Tools**
+### Testing and Validation Tools
 
 - **`oe-test`**: Executes tests related to OpenEmbedded builds.
 - **`test-reexec`**: Tests the re-execution of processes for validation purposes.
@@ -189,7 +187,7 @@ checking out as there are many more than the ones I list here.
                          to non-POSIX features.
 - **`yocto-check-layer`**: Verifies the correctness of Yocto Project layers.
 
-#### 5. **Package and SDK Management Tools**
+### Package and SDK Management Tools
 
 - **`oe-pkgdata-browser`**: GUI tool for browsing pkgdata information.
 - **`oe-publish-sdk`**: Publishes generated SDKs to remote locations.
@@ -197,7 +195,7 @@ checking out as there are many more than the ones I list here.
 - **`nativesdk-intercept`**: Handles SDK-specific task interceptions.
 - **`native-intercept`**: Manages intercepts for native builds.
 
-#### 6. **QEMU Utilities**
+### QEMU Utilities
 
 - **`runqemu`**: Runs OpenEmbedded images with QEMU for testing.
 - **`runqemu-export-rootfs`**: Exports root filesystem images for QEMU.
@@ -207,7 +205,7 @@ checking out as there are many more than the ones I list here.
 - **`runqemu-ifup`**: Handles network interface setup for QEMU.
 - **`runqemu-ifdown`**: Handles network interface teardown for QEMU.
 
-#### 7. **Utility Scripts**
+### Utility Scripts
 
 - **`cp-noerror`**: Copies files while ignoring errors.
 - **`oe-time-dd-test.sh`**: Tests disk I/O performance using `dd`.
