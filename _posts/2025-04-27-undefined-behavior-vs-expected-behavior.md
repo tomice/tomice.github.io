@@ -362,8 +362,8 @@ In memory, it would look something like this:
 ```bash
 Memory:
 [00][00][00][00][00][00][00][00]
-^^^^^^^^ first 4 bytes = float f
-                ^^^^^^^^^^^^^ rest 4 bytes = padding / start of double d
+ ^^^^^^^^^^^^^^ first 4 bytes = float f
+                 ^^^^^^^^^^^^^^ rest 4 bytes = padding / start of double d
 
 Result:
 - Full 8 bytes cleared to 0
@@ -403,8 +403,8 @@ In memory, it would look something like this:
 ```bash
 Memory:
 [00][00][00][00][??][??][??][??]
-^^^^^^^^ first 4 bytes = float f
-                ^^^^^^^^^^^^^ remaining 4 bytes = untouched
+ ^^^^^^^^^^^^^^ first 4 bytes = float f
+                 ^^^^^^^^^^^^^^ remaining 4 bytes = untouched
 
 Result:
 - First 4 bytes (float f) zeroed.
@@ -494,8 +494,10 @@ mov     [rax], rcx     # copy full 8 bytes
 
 Essentially, Clang is zero'ing the 4 byte float, but then it goes ahead and
 `memset`'s the rest of the union resulting in behavior similar to the older
-versions of GCC. It is almost as if the two compiler teams switched opinions on
-how this should be implemented!
+versions of GCC. I am guessing this is to make sure the entire memory region
+is zeroed out. TO me, it is almost as if the two compiler teams switched
+opinions on how this should be implemented with GCC now only clearing the first
+member, and Clang now clearing out the entire region.
 
 For anyone who wants to verify this, I created some godbolt links.
 
@@ -505,10 +507,10 @@ For anyone who wants to verify this, I created some godbolt links.
 ## Where GCC Breaks Historical Behavior
 
 So here is where we get to the main point of the issue. For over a decade, C
-devs have expected `{0}` to fully clear unions. Type punning is allowed in the
-newer C standards, and compilers have gone to great lengths to try to maintain
-memory safety by adhering to expected behavior, even if it is undefined or
-unspecified.
+devs have expected `{0}` to fully clear unions. Type punning appears to be
+allowed, at least to some degree, in the newer C standards, and compilers have
+gone to great lengths to try to maintain memory safety by adhering to expected
+behavior, even if it is undefined or unspecified.
 
 The latest change in GCC's handling of this breaks what I consider to be
 historical behavior, and it might lead to some interesting bugs that begin to
@@ -529,11 +531,13 @@ I completely understand why the GNU GCC team is allowed to do this given how
 the spec reads. Many GCC devs claim that
 [type punning via unions is undefined](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=118141#c13).
 There's also no such thing as truly historical behavior in the spec. However,
-there are certain things programmers rely on to be valid, even if they aren't
-well-defined. This is one of those cases where I think the compiler team might
-want to re-evaluate their decision, or at the very least present a solid
-argument as to why they are breaking away from a historical behavior that many
-of us have come to rely on, even if it was considered UB.
+there are certain assumptions programmers rely on to be valid, for better or
+for worse, even if they aren't well-defined. I really do believe this is one of
+those cases where I think the compiler team might want to re-evaluate their
+decision on making this flag-defined behavior instead of default behavior, or
+at the very least present a solid argument as to why they are shifting away
+from a historical behavior that many of us have come to rely on, even if it
+was considered UB.
 
 ## Further Reading
 
