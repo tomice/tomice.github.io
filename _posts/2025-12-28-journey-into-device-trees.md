@@ -186,7 +186,7 @@ board description itself.
 
 Here's a simplified example of what a generic device tree might look like:
 
-```dts
+```sh
 /dts-v1/;
 
 / {
@@ -267,7 +267,7 @@ but instead of the device self-reporting, the platform description reports it.
 
 ### `memory@80000000 { ... }`
 
-```dts
+```sh
 memory@80000000 {
     device_type = "memory";
     reg = <0x80000000 0x40000000>; /* 1 GB */
@@ -286,7 +286,7 @@ So the kernel learns: "RAM lives at `0x80000000` and is 1 GiB long."
 
 ### `cpus { ... } and cpu@0 { ... }`
 
-```dts
+```sh
 cpus {
     #address-cells = <1>;
     #size-cells = <0>;
@@ -319,7 +319,7 @@ This block is where embedded DTs get interesting because this is where devices
 within the SoC interact with each other, essentially defining the region where
 the hardware devices are mapped into memory:
 
-```dts
+```sh
 soc {
     compatible = "simple-bus";
     #address-cells = <1>;
@@ -350,7 +350,7 @@ defined here is a perfect example.
 
 #### `uart0: serial@9000000 { ... }`
 
-```dts
+```sh
 uart0: serial@9000000 {
     compatible = "ns16550a";
     reg = <0x09000000 0x1000>;
@@ -381,7 +381,7 @@ to the UART registers.
 trees, interrupts are almost always described relative to an interrupt
 controller, often looking like:
 
-```dts
+```sh
 interrupt-parent = <&gic>;
 interrupts = <0 37 4>; /* type, number, flags */
 ```
@@ -395,7 +395,7 @@ Some drivers need to know the input clock to compute
 In [newer device trees](https://android.googlesource.com/kernel/msm/+/android-7.1.0_r0.2/Documentation/devicetree/bindings/clock/sunxi.txt#78),
 you'll often see this modeled more explicitly using the common clock framework:
 
-```dts
+```sh
 clocks = <&osc24m>;
 clock-names = "uart";
 ```
